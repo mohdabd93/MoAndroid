@@ -1,0 +1,65 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: my-app/package-lock.json   # change if app is at root
+
+      - name: Install dependencies & build React
+        run: |
+          cd my-app
+          npm install --legacy-peer-deps   # use --legacy-peer-deps only if needed
+          npm run build                    # should produce a 'build' folder
+
+      - name: Setup Capacitor & Android
+        run: |
+          cd my-app
+          npm install @capacitor/core @capacitor/android --legacy-peer-deps
+          npx cap add android || true      # safe, does nothing if already added
+          npx cap sync
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 'latest'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('my-app/android/*.gradle*', 'my-app/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build debug APK
+        run: |
+          cd my-app/android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace   # stacktrace shows the real error
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: my-app/android/app/build/outputs/apk/debug/app-debug.apk
