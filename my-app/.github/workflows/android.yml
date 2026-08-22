@@ -17,18 +17,17 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install Dependencies & Build
+      - name: Install Dependencies & Build Web App
         run: |
           cd my-app
           npm install
           npm run build
+          mkdir -p dist
+          cp -r build/* dist/
 
-      - name: Fix WebDir & Sync Capacitor
+      - name: Sync Capacitor
         run: |
           cd my-app
-          # إنشاء مجلد dist للربط أو توجيهه للـ build لضمان التوافق
-          mkdir -p dist
-          cp -r build/* dist/ || true
           npx cap sync android
 
       - name: Setup Java
