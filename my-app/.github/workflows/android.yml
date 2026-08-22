@@ -17,14 +17,18 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install & Build
+      - name: Install Dependencies & Build
         run: |
           cd my-app
           npm install --legacy-peer-deps
           npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
           npm run build
-          npx @capacitor/cli add android || true
-          npx @capacitor/cli sync
+
+      - name: Setup Capacitor & Sync
+        run: |
+          cd my-app
+          npx cap add android || true
+          npx cap sync android
 
       - name: Setup Java
         uses: actions/setup-java@v4
