@@ -23,10 +23,12 @@ jobs:
           npm install
           npm run build
 
-      - name: Setup Capacitor & Sync
+      - name: Fix WebDir & Sync Capacitor
         run: |
           cd my-app
-          npx cap add android || true
+          # إنشاء مجلد dist للربط أو توجيهه للـ build لضمان التوافق
+          mkdir -p dist
+          cp -r build/* dist/ || true
           npx cap sync android
 
       - name: Setup Java
